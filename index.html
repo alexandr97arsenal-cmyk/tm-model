@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Electroscope Pro v2.3 — AUTO (Hosted TM)</title>
+<style>
+  :root{--bg:#0b1020;--card:#131a2b;--text:#e8ecff;--muted:#9fb3ff;--accent:#7aa2ff;--ok:#38c172;--warn:#ffcc66;--bad:#ff6b6b;--ink:#0b1020}
+  [data-theme="light"]{--bg:#f7f8ff;--card:#ffffff;--text:#0b1020;--muted:#51608f;--accent:#335dff;--ok:#179b51;--warn:#d89a01;--bad:#c63636;--ink:#ffffff}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px}
+  .app{background:var(--card);border-radius:22px;border:1px solid rgba(127,127,127,.2);box-shadow:0 14px 30px rgba(0,0,0,.30)}
+  header{display:flex;gap:14px;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px dashed rgba(127,127,127,.25)}
+  h1{margin:0;font-size:20px}
+  .muted{color:var(--muted);font-size:13px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .panel{padding:16px}
+  button,select,input[type="file"],input[type="text"]{border-radius:14px;border:1px solid rgba(127,127,127,.25);background:transparent;color:var(--text);padding:10px 12px}
+  button{background:var(--accent);border:0;color:var(--ink);font-weight:700;cursor:pointer}
+  button.secondary{background:transparent;border:1px solid rgba(127,127,127,.35);color:var(--text)}
+  button.ghost{background:transparent;border:1px dashed rgba(127,127,127,.35)}
+  button:disabled{opacity:.6;cursor:not-allowed}
+  .seg{display:flex;gap:6px;padding:6px;border-radius:14px;border:1px dashed rgba(127,127,127,.25)}
+  .seg button{background:transparent;border:1px solid rgba(127,127,127,.35);color:var(--text)}
+  .seg button.active{background:var(--accent);color:var(--ink);border-color:transparent}
+  .grid{display:grid;gap:14px}
+  @media(min-width:980px){.grid{grid-template-columns:1.25fr .75fr}}
+  .videoWrap{position:relative;border-radius:18px;overflow:hidden;background:#000}
+  video{width:100%;height:auto;display:block}
+  .overlay{position:absolute;inset:0;pointer-events:none;border:3px solid transparent;transition:border-color .2s ease}
+  .overlay.good{border-color:rgba(56,193,114,.9)}
+  .overlay.warn{border-color:rgba(255,204,102,.9)}
+  .overlay.bad{border-color:rgba(255,107,107,.9)}
+  .badge{padding:6px 10px;border-radius:999px;background:rgba(127,127,127,.15)}
+  .drop{border:1.5px dashed rgba(127,127,127,.45);border-radius:14px;padding:12px;text-align:center}
+  .drop.drag{background:rgba(127,127,127,.08)}
+  .result{background:linear-gradient(180deg, rgba(127,127,255,.08), transparent);border:1px solid rgba(127,127,127,.25);border-radius:18px;padding:12px}
+  .top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .pill{padding:6px 10px;border-radius:999px;font-weight:800;letter-spacing:.3px}
+  .pill.good{background:#0f2f26;color:#a1f0c4}
+  .pill.mid{background:#2a2a10;color:#fff3a1}
+  .pill.bad{background:#3a1316;color:#ffb3b3}
+  .bars{display:grid;gap:8px}
+  .barRow{display:flex;align-items:center;gap:8px}
+  .bar{flex:1;height:12px;background:rgba(127,127,127,.2);border-radius:999px;overflow:hidden}
+  .fill{height:100%;width:0%;background:var(--accent);transition:width .6s ease}
+  .label{min-width:120px;font-size:13px}
+  .val{min-width:54px;text-align:right;font-size:13px}
+  .tip{font-size:12px;color:var(--muted);margin-top:8px}
+  .gauge{position:relative;height:140px;margin:10px 0}
+  .gauge svg{width:100%;height:100%}
+  .needle{transform-origin:50% 90%;transition:transform .6s ease}
+  .history{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px}
+  .history img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;border:1px solid rgba(127,127,127,.25)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .status{font-size:13px;color:var(--muted)}
+  .footer{padding:12px 16px;border-top:1px dashed rgba(127,127,127,.25);font-size:12px;color:var(--muted)}
+  /* Buttons */
+  button,button.secondary,button.ghost{
+    background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%)!important;
+    color:#ffd400!important;border:1px solid rgba(255,212,0,.6)!important;
+    box-shadow:0 0 0 2px rgba(255,212,0,.12),0 8px 22px rgba(37,99,235,.35)!important;
+    font-weight:700!important;letter-spacing:.2px!important;border-radius:12px!important;text-shadow:0 1px 0 rgba(0,0,0,.35)!important
+  }
+  button:hover{filter:brightness(1.08);box-shadow:0 0 0 2px rgba(255,212,0,.18),0 10px 26px rgba(37,99,235,.45)!important}
+  button:disabled{opacity:.55!important;filter:grayscale(.15) brightness(.9);cursor:not-allowed!important}
+  body.btn-purple button, body.btn-purple button.secondary, body.btn-purple button.ghost{
+    background:linear-gradient(135deg,#6d28d9 0%,#a855f7 100%)!important;
+    box-shadow:0 0 0 2px rgba(255,212,0,.12),0 8px 22px rgba(168,85,247,.35)!important
+  }
+  body.btn-lowpower button, body.btn-lowpower button.secondary, body.btn-lowpower button.ghost{ text-shadow:none!important; box-shadow:0 0 0 2px rgba(255,212,0,.08)!important }
+  /* Research side panel */
+  .researchPanel{position:fixed;top:0;right:-420px;width:400px;max-width:90vw;height:100vh;background:var(--card);color:var(--text);
+    box-shadow:-10px 0 30px rgba(0,0,0,.35);border-left:1px solid rgba(127,127,127,.25);transition:right .35s ease;z-index:9999;display:flex;flex-direction:column}
+  .researchPanel.show{right:0}
+  .rp-head{padding:14px 16px;border-bottom:1px dashed rgba(127,127,127,.25);display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .rp-title{margin:0;font-size:16px}
+  .rp-body{padding:14px 16px;overflow:auto}
+  .rp-body h4{margin:.6em 0 .3em;font-size:14px}
+  .rp-body p,.rp-body li,.rp-body td,.rp-body th{font-size:13px;line-height:1.45}
+  .rp-table{width:100%;border-collapse:collapse;margin:.4em 0}
+  .rp-table th,.rp-table td{border:1px dashed rgba(127,127,127,.25);padding:6px;text-align:center}
+  .rp-foot{margin-top:auto;padding:12px;border-top:1px dashed rgba(127,127,127,.25)}
+  .rp-timer{padding:10px 14px;border-bottom:1px dashed rgba(127,127,127,.25);background:rgba(255,255,255,.02)}
+  .rp-time{font-size:28px;font-weight:800;text-align:center;letter-spacing:.5px;margin-bottom:8px;color:#ffd400;text-shadow:0 1px 0 rgba(0,0,0,.35)}
+  .rp-timer .mini{padding:6px 10px;font-size:13px;border-radius:10px}
+  .rp-timer .mini.active{box-shadow:0 0 0 2px rgba(255,212,0,.25),0 8px 22px rgba(37,99,235,.4)!important;filter:brightness(1.06)}
+  .share{margin-top:14px;padding:12px;border:1px dashed rgba(255,255,255,.2);border-radius:12px;background:#0e1630}
+  .share h3{margin:0 0 8px 0;font-size:14px;color:#9fb3ff}
+  .center{text-align:center}
+  input.link{width:100%;text-align:center;border:0;background:transparent;color:#cbd5ff;font-size:13px}
+</style>
+</head>
+<body data-theme="dark">
+  <div class="wrap">
+    <div class="app">
+      <header>
+        <div>
+          <h1>Electroscope Pro v2.3 — AUTO</h1>
+          <div class="muted">Live + File Upload • Gauge + Bars • Voice • RU/KZ/EN • Experiments + Timer • QR</div>
+          <div class="muted">Источник модели: TM Hosted (авто)</div>
+        </div>
+        <div class="row" style="justify-content:flex-end">
+          <select id="lang">
+            <option value="ru">Рус</option>
+            <option value="kz">Қаз</option>
+            <option value="en">Eng</option>
+          </select>
+          <button id="themeBtn" class="secondary" title="Тема">🌙/🌞</button>
+          <select id="btnTheme" class="secondary" title="Стиль кнопок">
+            <option value="blue">Синяя</option>
+            <option value="purple">Фиолетовая</option>
+          </select>
+          <label class="row" style="gap:6px"><input id="eco" type="checkbox"/> Эко</label>
+          <button id="voiceBtn" class="secondary" title="Озвучка">🔊</button>
+        </div>
+      </header>
+
+      <div class="grid">
+        <div class="panel">
+          <div class="row">
+            <div class="seg" id="modeSeg">
+              <button data-mode="live" class="active">🎥 Live</button>
+              <button data-mode="upload">🖼️ File Upload</button>
+              <button data-mode="exp">🧪 Experiment</button>
+            </div>
+            <span class="badge" id="badgeModel">model: loading…</span>
+          </div>
+
+          <div class="videoWrap" style="margin-top:10px">
+            <video id="video" autoplay playsinline muted></video>
+            <div id="overlay" class="overlay"></div>
+          </div>
+
+          <div class="row" style="margin-top:8px">
+            <button id="btnStart">▶️ <span class="t" data-k="startCam">Включить камеру</span></button>
+            <button id="btnFlip" class="secondary">🔄 <span class="t" data-k="flip">Поменять камеру</span></button>
+            <button id="btnSnap" class="ghost" disabled>📸 <span class="t" data-k="snap">Сделать фото</span></button>
+            <button id="btnStop" class="secondary">⏹️ <span class="t" data-k="stopCam">Выключить камеру</span></button>
+          </div>
+          <div class="status" id="camStatus">Загружаем модель…</div>
+
+          <div class="grid2" style="margin-top:10px">
+            <div>
+              <input id="fileInput" type="file" accept="image/*" style="width:100%"/>
+              <div id="drop" class="drop" style="margin-top:8px">Перетащите фото сюда или нажмите «Выбрать файл»</div>
+            </div>
+            <div>
+              <div class="result" id="result" style="display:none">
+                <div class="top"><span id="emoji" style="font-size:22px">🔬</span><div id="headline" class="pill mid">Ожидаем…</div></div>
+                <div class="gauge">
+                  <svg viewBox="0 0 200 120">
+                    <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="rgba(127,127,127,.4)" stroke-width="12"/>
+                    <g class="needle" id="needle" transform="rotate(0 100 100)">
+                      <rect x="98" y="30" width="4" height="72" fill="var(--accent)" rx="2"/>
+                      <circle cx="100" cy="100" r="6" fill="var(--accent)"/>
+                    </g>
+                  </svg>
+                </div>
+                <div class="bars" id="bars"></div>
+                <div class="tip" id="tip"></div>
+                <div class="row" style="margin-top:8px">
+                  <button id="btnSave" class="secondary">💾 Сохранить результат</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="history" id="history"></div>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin-top:0">Режимы</h3>
+          <div id="modeDesc" class="muted" style="margin-bottom:8px">Live — одиночные снимки; File Upload — из файла; Experiment — серия измерений.</div>
+
+          <div id="researchTriggers" class="row" style="margin-top:8px">
+            <button id="btnR1" class="ghost">📝 Исследование 1</button>
+            <button id="btnR2" class="ghost">🧪 Исследование 2</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="share center">
+        <h3>Поделиться ссылкой</h3>
+        <canvas id="qr" width="160" height="160" style="margin:8px auto;display:block;background:#fff;border-radius:8px"></canvas>
+        <input id="link" class="link" readonly value="">
+        <div style="margin-top:8px"><button id="copy">Копировать ссылку</button></div>
+      </div>
+
+      <div class="footer">HTTPS обязателен для камеры. Версии: tfjs 3.21.0 + tm-image 0.8.4. Модель подхватывается автоматически из TM Hosted.</div>
+    </div>
+  </div>
+
+  <!-- libs -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.4/dist/teachablemachine-image.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+
+<script>
+(function(){
+  // ====== CONFIG ======
+  const VC = (new URLSearchParams(location.search).get('v')) || '1';
+  const TM_HOSTED_URL = "https://teachablemachine.withgoogle.com/models/3yj3ar_sB/"; // fixed hosted model
+
+  // ====== I18N ======
+  const I18N = {
+    ru:{ startCam:'Включить камеру', flip:'Поменять камеру', snap:'Сделать фото', stopCam:'Выключить камеру',
+         tips:['Держите электроскоп на свету.','Заполните кадр объектом.','Сделайте 3–5 снимков под разными углами.'] },
+    kz:{ startCam:'Камераны қосу', flip:'Камераны ауыстыру', snap:'Суретке түсіру', stopCam:'Камераны өшіру',
+         tips:['Электроскопты жарық жерде ұстаңыз.','Кадрды объектпен толтырыңыз.','3–5 сурет әртүрлі бұрыштан жасаңыз.'] },
+    en:{ startCam:'Start camera', flip:'Flip camera', snap:'Take photo', stopCam:'Stop camera',
+         tips:['Keep the electroscope well lit.','Fill the frame with the object.','Take 3–5 shots from different angles.'] }
+  };
+  const lang = document.getElementById('lang');
+  function refreshI18n(){
+    const dict = I18N[lang.value] || I18N.ru;
+    document.querySelectorAll('.t').forEach(el=>{ const k=el.getAttribute('data-k'); if(dict[k]) el.textContent=dict[k]; });
+  }
+  lang.addEventListener('change', refreshI18n); refreshI18n();
+
+  // ====== Elements ======
+  const video = document.getElementById('video');
+  const overlay = document.getElementById('overlay');
+  const camStatus = document.getElementById('camStatus');
+  const btnStart = document.getElementById('btnStart');
+  const btnFlip = document.getElementById('btnFlip');
+  const btnSnap = document.getElementById('btnSnap');
+  const btnStop = document.getElementById('btnStop');
+  const badgeModel = document.getElementById('badgeModel');
+
+  const fileInput = document.getElementById('fileInput');
+  const drop = document.getElementById('drop');
+  const historyBox = document.getElementById('history');
+
+  const resultBox = document.getElementById('result');
+  const emoji = document.getElementById('emoji');
+  const headline = document.getElementById('headline');
+  const barsBox = document.getElementById('bars');
+  const tip = document.getElementById('tip');
+  const needle = document.getElementById('needle');
+
+  const voiceBtn = document.getElementById('voiceBtn');
+  const themeBtn = document.getElementById('themeBtn');
+  const btnTheme = document.getElementById('btnTheme');
+  const eco = document.getElementById('eco');
+
+  const modeSeg = document.getElementById('modeSeg');
+  const modeDesc = document.getElementById('modeDesc');
+
+  // ====== State ======
+  let model=null, stream=null, facing='environment', voiceOn=localStorage.getItem('voiceOn')!=='false';
+
+  // ====== Voice & theme ======
+  voiceBtn.textContent = voiceOn ? '🔊' : '🔇';
+  voiceBtn.onclick = ()=>{ voiceOn=!voiceOn; localStorage.setItem('voiceOn',String(voiceOn)); voiceBtn.textContent = voiceOn?'🔊':'🔇'; };
+  function speak(text){ if(!voiceOn) return; try{ window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang=(lang.value==='kz'?'kk-KZ':lang.value==='en'?'en-US':'ru-RU'); window.speechSynthesis.speak(u);}catch(_){} }
+  function speakResult(label, prob){ const p=Math.round(prob*100); const word=(lang.value==='kz'?'пайыз':lang.value==='en'?'percent':'процентов'); speak(`${label} — ${p} ${word}`); }
+  themeBtn.onclick=()=>{ const cur=document.body.getAttribute('data-theme'); document.body.setAttribute('data-theme', cur==='dark'?'light':'dark'); };
+  btnTheme.onchange=()=>{ document.body.classList.toggle('btn-purple', btnTheme.value==='purple'); };
+  eco.onchange=()=>{ document.body.classList.toggle('btn-lowpower', eco.checked); };
+
+  // ====== Model (Hosted first) ======
+  function deriveHostedUrls(base){
+    let root = (base||'').trim(); if(!root) return null;
+    if(!root.endsWith('/')) root += '/';
+    return { model: root + 'model.json?v=' + VC, metadata: root + 'metadata.json?v=' + VC };
+  }
+  async function loadHosted(){
+    const urls = deriveHostedUrls(TM_HOSTED_URL);
+    badgeModel.textContent='loading…';
+    model = await tmImage.load(urls.model, urls.metadata);
+    badgeModel.textContent='loaded';
+    camStatus.textContent='Модель загружена.';
+  }
+  loadHosted().catch((e)=>{ console.error(e); badgeModel.textContent='ERROR'; camStatus.textContent='Не удалось загрузить модель из TM.'; });
+
+  // ====== Camera ======
+  async function startCamera(){
+    try{
+      if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+      const cons = {video:{ facingMode:{ exact:facing } }, audio:false};
+      stream = await navigator.mediaDevices.getUserMedia(cons);
+      video.srcObject = stream; await video.play();
+      camStatus.textContent = (I18N[lang.value]||I18N.ru).startCam + ': OK'; btnSnap.disabled=false;
+    }catch(e){
+      try{
+        const fb = {video:{ facingMode: (facing==='environment'?'user':'environment') }, audio:false};
+        stream = await navigator.mediaDevices.getUserMedia(fb);
+        facing = (facing==='environment'?'user':'environment');
+        video.srcObject = stream; await video.play();
+        camStatus.textContent = 'Включена другая камера (fallback)'; btnSnap.disabled=false;
+      }catch(e2){
+        camStatus.textContent = 'Не удалось включить камеру. Проверь HTTPS и разрешение.';
+      }
+    }
+  }
+  function stopCamera(){ try{ if(stream){ stream.getTracks().forEach(t=>t.stop()); } }catch(_){} stream=null; try{ video.srcObject=null; video.pause(); }catch(_){} camStatus.textContent='Камера выключена.'; btnSnap.disabled=true; }
+  btnStart.addEventListener('click', startCamera);
+  btnFlip.addEventListener('click', async()=>{ facing=(facing==='environment'?'user':'environment'); await startCamera(); });
+  btnStop.addEventListener('click', stopCamera);
+
+  // ====== Prediction UI ======
+  function setNeedle(prob){ const angle = -70 + Math.max(0,Math.min(1,prob))*140; needle.style.transform = `rotate(${angle} 100 100)`; }
+  function renderPreds(preds){
+    resultBox.style.display='block';
+    barsBox.innerHTML='';
+    preds.sort((a,b)=>b.probability-a.probability);
+    const top = preds[0];
+    const p = (top.probability*100).toFixed(1);
+    setNeedle(top.probability);
+    let mood='bad', pill='pill bad', em='🤔', msg=(I18N[lang.value]||I18N.ru).tips[0];
+    if (top.probability>=0.8){ mood='good'; pill='pill good'; em='⚡'; msg=(I18N[lang.value]||I18N.ru).tips[1]; }
+    else if (top.probability>=0.5){ mood='warn'; pill='pill mid'; em='✨'; msg=(I18N[lang.value]||I18N.ru).tips[2]; }
+    overlay.className = 'overlay ' + (mood==='good'?'good':mood==='warn'?'warn':'bad');
+    headline.className = pill; headline.textContent = `${top.className} — ${p}%`;
+    emoji.textContent = em; tip.textContent = msg;
+    preds.forEach(pr=>{
+      const row=document.createElement('div'); row.className='barRow';
+      const lab=document.createElement('div'); lab.className='label'; lab.textContent=pr.className;
+      const bar=document.createElement('div'); bar.className='bar';
+      const fill=document.createElement('div'); fill.className='fill';
+      const val=document.createElement('div'); val.className='val'; val.textContent=(pr.probability*100).toFixed(1)+'%';
+      bar.appendChild(fill); row.append(lab,bar,val); barsBox.appendChild(row);
+      requestAnimationFrame(()=>{ fill.style.width=(pr.probability*100).toFixed(1)+'%'; });
+    });
+  }
+  async function classifyFrom(el){
+    if(!model){ alert('Модель ещё не загружена'); return; }
+    const preds = await model.predict(el);
+    renderPreds(preds);
+    const top = preds[0]; speakResult(top.className, top.probability);
+  }
+  btnSnap.addEventListener('click', async()=>{
+    if(!video.videoWidth){ alert('Камера не готова'); return; }
+    const c=document.createElement('canvas'); c.width=video.videoWidth; c.height=video.videoHeight;
+    c.getContext('2d').drawImage(video,0,0);
+    await classifyFrom(c);
+  });
+
+  // ====== File handling ======
+  function attachFile(file){
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = ()=>{ URL.revokeObjectURL(url); classifyFrom(img); };
+    img.src = url;
+    const thumb = new Image(); thumb.src=url; thumb.style.cursor='pointer'; thumb.onclick=()=> classifyFrom(img);
+    historyBox.prepend(thumb); while(historyBox.children.length>8) historyBox.removeChild(historyBox.lastChild);
+  }
+  fileInput.addEventListener('change', e=>{ const f=e.target.files&&e.target.files[0]; if(f) attachFile(f); });
+  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.classList.add('drag');}));
+  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.classList.remove('drag');}));
+  drop.addEventListener('drop', e=>{ e.preventDefault(); const f=e.dataTransfer.files&&e.dataTransfer.files[0]; if(f) attachFile(f); });
+
+  // ====== Modes ======
+  function setMode(mode){
+    modeSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
+    localStorage.setItem('mode', mode);
+    modeDesc.textContent = mode==='live' ? 'Live — одиночные снимки' : mode==='upload' ? 'File Upload — анализ фото' : 'Experiment — серия снимков с итогами';
+  }
+  modeSeg.addEventListener('click', (e)=>{ const b=e.target.closest('button'); if(b && b.dataset.mode) setMode(b.dataset.mode); });
+  setMode(localStorage.getItem('mode')||'live');
+
+  // ====== Research panel ======
+  const research = document.createElement('aside');
+  research.className='researchPanel'; research.id='research';
+  research.innerHTML = `
+    <div class="rp-head">
+      <h3 class="rp-title" id="rpTitle">Исследование</h3>
+      <button id="rpClose" class="secondary" aria-label="Закрыть">✖</button>
+    </div>
+    <div class="rp-timer">
+      <div class="rp-time" id="rpTimeValue">00:05</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap;justify-content:center">
+        <button class="mini" data-seconds="5"  id="rpT5">5 с</button>
+        <button class="mini" data-seconds="10" id="rpT10">10 с</button>
+        <button class="mini" data-seconds="15" id="rpT15">15 с</button>
+        <button class="mini" data-seconds="20" id="rpT20">20 с</button>
+        <button class="mini" id="rpStartPause">▶️</button>
+        <button class="mini" id="rpReset">⏹️</button>
+      </div>
+    </div>
+    <div class="rp-body" id="rpBody"></div>
+    <div class="rp-foot"><div class="row"><button id="rpBack" class="ghost">← Вернуться назад</button></div></div>`;
+  document.body.appendChild(research);
+
+  function researchHTML(which){
+    if(which===1) return `
+      <h4>Исследовательская работа №1</h4>
+      <p><strong>Тема:</strong> Как меняется заряд при увеличении времени трения</p>
+      <h4>Цель</h4><p>Определить, как длительность трения влияет на величину распознанного заряда.</p>
+      <h4>Ход исследования</h4>
+      <ol>
+        <li>Расположи предмет на расстоянии <strong>4 см</strong> от купола электроскопа.</li>
+        <li>Натирай предмет: <strong>5</strong>, <strong>10</strong>, <strong>15</strong>, <strong>20</strong> секунд.</li>
+        <li>После каждого трения поднеси предмет на 4 см и сделай распознавание.</li>
+        <li>Между попытками пауза <strong>10 с</strong>.</li>
+      </ol>
+      <h4>Таблица наблюдений</h4>
+      <table class="rp-table">
+        <tr><th>№</th><th>Время (с)</th><th>Материал</th><th>Дистанция (см)</th><th>Заряд (Кл)</th><th>Вероятность (%)</th></tr>
+        <tr><td>1</td><td>5</td><td>…</td><td>4</td><td>…</td><td>…</td></tr>
+        <tr><td>2</td><td>10</td><td>…</td><td>4</td><td>…</td><td>…</td></tr>
+        <tr><td>3</td><td>15</td><td>…</td><td>4</td><td>…</td><td>…</td></tr>
+        <tr><td>4</td><td>20</td><td>…</td><td>4</td><td>…</td><td>…</td></tr>
+      </table>`;
+    return `
+      <h4>Исследовательская работа №2</h4>
+      <p><strong>Тема:</strong> Влияние расстояния на распознанный заряд</p>
+      <h4>Цель</h4><p>Определить, как изменяется величина заряда при изменении расстояния.</p>
+      <h4>Ход исследования</h4>
+      <ol>
+        <li>Натирай предмет <strong>20 секунд</strong> (одинаково во всех опытах).</li>
+        <li>Распознавай при расстояниях: <strong>2</strong>, <strong>4</strong>, <strong>6</strong>, <strong>8</strong>, <strong>10 см</strong>.</li>
+        <li>Не меняй ракурс, не касайся купола.</li>
+      </ol>
+      <h4>Таблица наблюдений</h4>
+        <table class="rp-table">
+        <tr><th>№</th><th>Расстояние (см)</th><th>Время трения (с)</th><th>Материал</th><th>Заряд (Кл)</th><th>Вероятность (%)</th></tr>
+        <tr><td>1</td><td>2</td><td>20</td><td>…</td><td>…</td><td>…</td></tr>
+        <tr><td>2</td><td>4</td><td>20</td><td>…</td><td>…</td><td>…</td></tr>
+        <tr><td>3</td><td>6</td><td>20</td><td>…</td><td>…</td><td>…</td></tr>
+        <tr><td>4</td><td>8</td><td>20</td><td>…</td><td>…</td><td>…</td></tr>
+        <tr><td>5</td><td>10</td><td>20</td><td>…</td><td>…</td><td>…</td></tr>
+      </table>`;
+  }
+  const rpBody = research.querySelector('#rpBody');
+  const rpTitle = research.querySelector('#rpTitle');
+  const rpClose = research.querySelector('#rpClose');
+  const rpBack = research.querySelector('#rpBack');
+  function openResearch(which){ rpTitle.textContent = which===1 ? 'Исследование 1' : 'Исследование 2'; rpBody.innerHTML = researchHTML(which); research.classList.add('show'); }
+  function closeResearch(){ research.classList.remove('show'); }
+  document.getElementById('btnR1').addEventListener('click', ()=>openResearch(1));
+  document.getElementById('btnR2').addEventListener('click', ()=>openResearch(2));
+  rpClose.addEventListener('click', closeResearch);
+  rpBack.addEventListener('click', closeResearch);
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeResearch(); });
+
+  // Timer
+  (function(){
+    const el = {
+      val: research.querySelector('#rpTimeValue'),
+      t5:  research.querySelector('#rpT5'),
+      t10: research.querySelector('#rpT10'),
+      t15: research.querySelector('#rpT15'),
+      t20: research.querySelector('#rpT20'),
+      go:  research.querySelector('#rpStartPause'),
+      rst: research.querySelector('#rpReset'),
+      panel: research
+    };
+    let seconds = 5, left = 5, running=false, id=null;
+    function fmt(s){ s=Math.max(0,s|0); const m=(s/60|0).toString().padStart(2,'0'); const ss=(s%60).toString().padStart(2,'0'); return `${m}:${ss}`; }
+    function render(){ el.val.textContent = fmt(left); [el.t5,el.t10,el.t15,el.t20].forEach(b=>{ if(!b) return; const s=+b.dataset.seconds; b.classList.toggle('active', s===seconds); }); el.go.textContent = running ? '⏸️' : '▶️'; }
+    function setSec(s){ seconds=s; left=s; render(); }
+    function tick(){ if(!running) return; left -= 1; render(); if(left<=0){ pause(); left=0; render(); try{ if(navigator.vibrate) navigator.vibrate([120,80,120]); }catch(_){}} }
+    function start(){ if(running) return; running=true; render(); if(id) clearInterval(id); id=setInterval(tick,1000); }
+    function pause(){ running=false; render(); if(id){ clearInterval(id); id=null; } }
+    function reset(){ pause(); left=seconds; render(); }
+    el.t5.onclick=()=>setSec(5); el.t10.onclick=()=>setSec(10); el.t15.onclick=()=>setSec(15); el.t20.onclick=()=>setSec(20);
+    el.go.onclick=()=>{ running ? pause() : start(); }; el.rst.onclick=reset; render();
+  })();
+
+  // QR & Share link
+  (function(){
+    const CANONICAL = location.href.split('#')[0];
+    const link = document.getElementById('link'); if(link) link.value = CANONICAL;
+    const cvs = document.getElementById('qr'); if(cvs && window.QRCode){ QRCode.toCanvas(cvs, CANONICAL, {margin:1, color:{dark:'#000', light:'#fff'}}); }
+    const copyBtn = document.getElementById('copy'); if(copyBtn){ copyBtn.addEventListener('click', ()=>{ navigator.clipboard.writeText(CANONICAL); copyBtn.textContent='Скопировано!'; setTimeout(()=>copyBtn.textContent='Копировать ссылку', 1200); }); }
+  })();
+})();
+</script>
+</body>
+</html>
